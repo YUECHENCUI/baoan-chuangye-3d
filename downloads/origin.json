@@ -1,0 +1,7 @@
+{
+ "crs": "EPSG:32650 (WGS 84 / UTM zone 50N)",
+ "origin_easting": 181200,
+ "origin_northing": 2499600,
+ "units": "m",
+ "axes": "X=East, Y=North, Z=Up (OBJ/3DM); glTF is Y-up per spec"
+}
