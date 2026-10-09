@@ -32,6 +32,11 @@
   .maplibregl-popup-content{font-size:12px;line-height:1.55;padding:8px 10px}
   .maplibregl-popup-content b{font-size:13px}
   .maplibregl-popup-content table td{padding:0 6px 0 0;vertical-align:top}
+  .anno-label{font-family:"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",system-ui,sans-serif;
+    font-size:13px;font-weight:600;padding:2px 8px;border-radius:4px;white-space:nowrap;
+    pointer-events:none;user-select:none;box-shadow:0 1px 4px rgba(0,0,0,.35);letter-spacing:.5px}
+  .anno-label.peak{background:rgba(30,90,40,.88);color:#e8ffe8;border:1px solid #7dffa0}
+  .anno-label.canal{background:rgba(0,120,140,.9);color:#e6ffff;border:1px solid #7dfff5}
 </style>
 </head>
 <body>
@@ -45,7 +50,7 @@
     <h2>底图</h2>
     <select id="basemap">
       <option value="amap">高德地图 · 矢量（GCJ-02）</option>
-      <option value="amapsat">高德地图 · 卫星（GCJ-02）</option>
+      <option value="amapsat" selected>高德地图 · 卫星（GCJ-02）</option>
       <option value="esri">Esri World Imagery · 卫星（WGS84）</option>
       <option value="esrigray">Esri 浅灰底图（WGS84）</option>
       <option value="osm">OpenStreetMap · 标准（WGS84）</option>
@@ -60,6 +65,9 @@
     <label><input type="checkbox" id="t-study" checked>研究范围线（2022国际咨询）</label>
     <label><input type="checkbox" id="t-red" checked>城市更新重点片区范围</label>
     <label><input type="checkbox" id="t-road">主要道路（OSM）</label>
+    <label><input type="checkbox" id="t-mountain" checked>山体资源</label>
+    <label><input type="checkbox" id="t-canal" checked>水渠（新圳河）</label>
+    <label><input type="checkbox" id="t-labels" checked>标注</label>
   </section>
   <section>
     <h2>体块着色</h2>
@@ -74,6 +82,8 @@
     <div id="legend"></div>
     <div class="lg"><span class="ln" style="border-top:3px dashed #555;border-image:none"></span>研究范围线（2022国际咨询）</div>
     <div class="lg"><span class="ln" style="border-color:#d22"></span>城市更新重点片区范围</div>
+    <div class="lg"><span class="sw" style="background:rgba(46,160,67,.45);border-color:#2ea043"></span>山体资源</div>
+    <div class="lg"><span class="ln" style="border-color:#00bcd4;border-top-style:solid;border-top-width:3px"></span>水渠（新圳河）</div>
   </section>
   <section>
     <h2>视角</h2>
@@ -94,11 +104,14 @@
       <a href="downloads/massing.glb" download>massing.glb</a><br>
       <a href="downloads/footprints.geojson" download>footprints.geojson</a> ·
       <a href="downloads/boundary.geojson" download>boundary.geojson</a><br>
+      <a href="data/mountains.geojson" download>mountains.geojson</a> ·
+      <a href="data/canal.geojson" download>canal.geojson</a> ·
+      <a href="data/labels.geojson" download>labels.geojson</a>（标注可改）<br>
       坐标：EPSG:32650（UTM 50N）局部原点 E=181200，N=2499600，单位 m，Z 向上。
     </div>
   </section>
   <section class="muted">
-    数据：建筑底面 © OpenStreetMap 贡献者（ODbL）+ 3D-GloBFP（Che et al. 2024）；高度来自 OSM 标注或 3D-GloBFP / CMAB 估算（见各建筑属性）。范围线由“图二：基地范围”配准并贴合 OSM 道路中心线，存在数十米级误差，仅供研究参考。
+    数据：建筑底面 © OpenStreetMap 贡献者（ODbL）+ 3D-GloBFP（Che et al. 2024）；高度来自 OSM 标注或 3D-GloBFP / CMAB 估算（见各建筑属性）。山体资源取自 OSM wood/forest（尖岗山/大井山/孖松山）；水渠为 OSM「新圳河」。标注可改 <code>data/labels.geojson</code>。范围线由“图二：基地范围”配准并贴合 OSM 道路中心线，存在数十米级误差，仅供研究参考。
   </section>
 </div>
 <div id="notice"></div>
@@ -129,7 +142,7 @@ var SRC_COLOR={osm_height:'#1f5fa8',osm_levels:'#4f97e0',est_neighbor:'#5aa469',
 var TYPE_CN={apartments:'住宅(公寓)',residential:'住宅',commercial:'商业',office:'办公',industrial:'工业',school:'学校',retail:'零售',kindergarten:'幼儿园',house:'独立住宅',dormitory:'宿舍',hospital:'医院',construction:'在建',train_station:'车站',yes:'建筑',hotel:'酒店',public:'公共建筑',university:'高校',warehouse:'仓库',roof:'顶棚',civic:'市政',government:'政府'};
 
 var DATA={wgs:{},gcj:{}};
-var currentCRS='gcj', currentBase='amap';
+var currentCRS='gcj', currentBase='amapsat';
 
 function emptyStyle(){
   return {version:8,sources:{},layers:[{id:'bg',type:'background',paint:{'background-color':'#eceae6'}}]};
@@ -159,7 +172,7 @@ function setBase(key){
     map.addLayer({id:'base',type:'raster',source:'base',paint:{'raster-fade-duration':150}},map.getLayer('roads')?'roads':undefined);
     applyGray();
   }
-  if(bm.crs!==currentCRS){ currentCRS=bm.crs; ['buildings','boundary','roads'].forEach(function(n){ if(map.getSource(n)) map.getSource(n).setData(DATA[currentCRS][n]); }); }
+  if(bm.crs!==currentCRS){ currentCRS=bm.crs; ['buildings','boundary','roads','mountains','canal','labels'].forEach(function(n){ if(map.getSource(n)&&DATA[currentCRS][n]) map.getSource(n).setData(DATA[currentCRS][n]); }); syncLabelMarkers(); }
   if(key==='none'){ setVis('roads',true); document.getElementById('t-road').checked=true; }
 }
 function applyGray(){
@@ -207,17 +220,41 @@ function computeViews(){
 function gcjCenter(v){ if(currentCRS!=='gcj') return v; var o=Object.assign({},v); var c=maplibregl.LngLat.convert(v.center); o.center=wgs2gcj([c.lng,c.lat]); return o; }
 function go(name,instant){ var v=gcjCenter(VIEWS[name]); if(instant) map.jumpTo(v); else map.flyTo(Object.assign({duration:1600,essential:true},v)); }
 
+var labelMarkers=[];
+function clearLabelMarkers(){ labelMarkers.forEach(function(m){m.remove();}); labelMarkers=[]; }
+function syncLabelMarkers(){
+  clearLabelMarkers();
+  if(!document.getElementById('t-labels').checked) return;
+  var fc=DATA[currentCRS].labels; if(!fc) return;
+  fc.features.forEach(function(ft){
+    var kind=ft.properties.kind==='canal'?'canal':'peak';
+    var el=document.createElement('div');
+    el.className='anno-label '+kind;
+    el.textContent=ft.properties.name;
+    var mk=new maplibregl.Marker({element:el,anchor:'bottom',offset:[0,-4]})
+      .setLngLat(ft.geometry.coordinates).addTo(map);
+    labelMarkers.push(mk);
+  });
+}
+
 map.on('load',function(){
-  Promise.all([loadJSON('buildings'),loadJSON('boundary'),loadJSON('roads')]).then(function(r){
-    DATA.wgs={buildings:r[0],boundary:r[1],roads:r[2]};
-    DATA.gcj={buildings:toGCJ(r[0]),boundary:toGCJ(r[1]),roads:toGCJ(r[2])};
+  Promise.all([loadJSON('buildings'),loadJSON('boundary'),loadJSON('roads'),loadJSON('mountains'),loadJSON('canal'),loadJSON('labels')]).then(function(r){
+    DATA.wgs={buildings:r[0],boundary:r[1],roads:r[2],mountains:r[3],canal:r[4],labels:r[5]};
+    DATA.gcj={buildings:toGCJ(r[0]),boundary:toGCJ(r[1]),roads:toGCJ(r[2]),mountains:toGCJ(r[3]),canal:toGCJ(r[4]),labels:toGCJ(r[5])};
     var d=DATA[currentCRS];
     map.addSource('roads',{type:'geojson',data:d.roads});
     map.addSource('boundary',{type:'geojson',data:d.boundary});
     map.addSource('buildings',{type:'geojson',data:d.buildings,promoteId:'bid'});
+    map.addSource('mountains',{type:'geojson',data:d.mountains});
+    map.addSource('canal',{type:'geojson',data:d.canal});
+    map.addSource('labels',{type:'geojson',data:d.labels});
     map.addLayer({id:'roads',type:'line',source:'roads',layout:{visibility:'none','line-cap':'round','line-join':'round'},paint:{'line-color':'#ffffff','line-width':['interpolate',['linear'],['zoom'],12,['match',['get','highway'],['motorway','trunk'],2.2,['primary'],1.6,1.0],16,['match',['get','highway'],['motorway','trunk'],9,['primary'],7,4]],'line-opacity':0.95}});
     map.addLayer({id:'roads-case',type:'line',source:'roads',layout:{visibility:'none'},paint:{'line-color':'#b9b6ae','line-width':0.6,'line-gap-width':['interpolate',['linear'],['zoom'],12,1.2,16,5]}},'roads');
     map.addLayer({id:'study-fill',type:'fill',source:'boundary',filter:['==',['get','kind'],'study_area'],paint:{'fill-color':'#ffffff','fill-opacity':0.0}});
+    map.addLayer({id:'mountain-fill',type:'fill',source:'mountains',paint:{'fill-color':'#2ea043','fill-opacity':0.38}});
+    map.addLayer({id:'mountain-outline',type:'line',source:'mountains',paint:{'line-color':'#1a7f37','line-width':1.6,'line-opacity':0.85}});
+    map.addLayer({id:'canal-halo',type:'line',source:'canal',layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':'#003d4d','line-width':8,'line-opacity':0.35,'line-blur':1}});
+    map.addLayer({id:'canal-line',type:'line',source:'canal',layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':'#00e5ff','line-width':3.5,'line-opacity':0.95}});
     map.addLayer({id:'red-line',type:'line',source:'boundary',filter:['==',['get','kind'],'renewal_area'],paint:{'line-color':'#d42020','line-width':2.2,'line-dasharray':[3,2],'line-opacity':0.9}});
     map.addLayer({id:'study-halo',type:'line',source:'boundary',filter:['==',['get','kind'],'study_area'],paint:{'line-color':'#ffffff','line-width':6,'line-opacity':0.7}});
     map.addLayer({id:'study-line',type:'line',source:'boundary',filter:['==',['get','kind'],'study_area'],paint:{'line-color':'#4a4a4a','line-width':3,'line-dasharray':[5,1.6,1,1.6]}});
@@ -226,6 +263,7 @@ map.on('load',function(){
     map.addLayer({id:'bld-hl',type:'fill-extrusion',source:'buildings',filter:['==',['get','bid'],-1],paint:{'fill-extrusion-color':'#ff8a2a','fill-extrusion-height':['+',['get','h'],0.3],'fill-extrusion-base':0,'fill-extrusion-opacity':0.95}});
     map.setLight({anchor:'map',position:[1.5,215,40],color:'#ffffff',intensity:0.38});
     setBase(document.getElementById('basemap').value);
+    syncLabelMarkers();
     computeViews(); go('home',true);
     // stats
     var fs=DATA.wgs.buildings.features, st=fs.filter(function(f){return f.properties.st===1;});
@@ -270,6 +308,9 @@ document.getElementById('t-ctx').onchange=function(){setVis('bld-ctx',this.check
 document.getElementById('t-study').onchange=function(){setVis(['study-line','study-halo'],this.checked);};
 document.getElementById('t-red').onchange=function(){setVis('red-line',this.checked);};
 document.getElementById('t-road').onchange=function(){setVis(['roads','roads-case'],this.checked);};
+document.getElementById('t-mountain').onchange=function(){setVis(['mountain-fill','mountain-outline'],this.checked);};
+document.getElementById('t-canal').onchange=function(){setVis(['canal-halo','canal-line'],this.checked);};
+document.getElementById('t-labels').onchange=function(){syncLabelMarkers();};
 document.getElementById('colormode').onchange=setColorMode;
 document.getElementById('v-home').onclick=function(){go('home');};
 document.getElementById('v-top').onclick=function(){go('top');};

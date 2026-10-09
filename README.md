@@ -5,11 +5,13 @@
 ## 使用
 - 在线：发布到 GitHub Pages 后直接打开 `index.html`。
 - 本地：在本目录运行 `python3 -m http.server`，浏览器访问 `http://localhost:8000`；或直接双击 `index_standalone.html`（数据与程序已内嵌，底图瓦片仍需联网）。
+- 默认底图：高德卫星（GCJ-02）+ 底图灰度淡化。
 - 底图可切换：高德矢量 / 高德卫星（GCJ-02，自动纠偏）、Esri 卫星 / Esri 浅灰 / OSM（WGS84）、无底图。
+- 图层：山体资源（尖岗山 / 大井山 / 孖松山，绿色半透明）、水渠（新圳河，青色）、标注（可开关；编辑 `data/labels.geojson` 即可改文字与位置）。
 - 点击建筑可查看高度、高度来源、底面来源等属性。
 
 ## 文件
-- `index.html`、`assets/`（MapLibre GL JS 5.24，本地化）、`data/`（建筑、范围线、道路 GeoJSON，WGS84）
+- `index.html`、`assets/`（MapLibre GL JS 5.24，本地化）、`data/`（建筑、范围线、道路、mountains、canal、labels GeoJSON，WGS84；高德底图时自动转 GCJ-02）
 - `downloads/`：`massing.3dm` / `massing.obj` / `massing.glb`（EPSG:32650 UTM 50N，局部原点 E=181200、N=2499600，单位 m，Z 向上；glb 按规范为 Y 向上），`footprints.geojson`（含高度与来源字段），`boundary.geojson`
 
 ## 数据与精度说明

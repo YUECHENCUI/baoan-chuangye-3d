@@ -1,0 +1,79 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "label_jiangang",
+        "name": "尖岗山",
+        "kind": "peak",
+        "target": "jiangang",
+        "osm_peak": "node/6354074409",
+        "editable": true
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          113.9113719,
+          22.5962051
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "label_dajing",
+        "name": "大井山",
+        "kind": "peak",
+        "target": "dajing",
+        "osm_peak": "node/6354074410",
+        "editable": true
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          113.9076383,
+          22.5901627
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "label_masong",
+        "name": "孖松山",
+        "kind": "peak",
+        "target": "masong",
+        "osm_peak": "node/13414770440",
+        "editable": true
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          113.9040419,
+          22.5945931
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "label_xinzhen",
+        "name": "新圳河",
+        "kind": "canal",
+        "target": "xinzhen_he",
+        "editable": true
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          113.9035,
+          22.5638
+        ]
+      }
+    }
+  ],
+  "properties": {
+    "description": "标注文字 — 直接改 properties.name 与 geometry 坐标即可"
+  }
+}
