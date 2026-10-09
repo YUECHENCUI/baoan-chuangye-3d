@@ -128,6 +128,78 @@
           22.568617
         ]
       }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "label_tangling",
+        "name": "塘岭山",
+        "kind": "peak",
+        "target": "tangling",
+        "osm_peak": "node/6354074411",
+        "editable": true
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          113.9244825,
+          22.5946004
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "label_guanlong",
+        "name": "官龙山",
+        "kind": "peak",
+        "target": "guanlong",
+        "osm_peak": "node/11446059047",
+        "editable": true
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          113.9325521,
+          22.5893385
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "label_jigong",
+        "name": "鸡公山",
+        "kind": "peak",
+        "target": "jigong",
+        "osm_peak": "node/6353865786",
+        "editable": true
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          113.9270818,
+          22.5769873
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "label_dashi",
+        "name": "打石路",
+        "kind": "place",
+        "target": "dashi_lu",
+        "note": "Road name label for highlighted 打石一路/打石路; place-style marker",
+        "editable": true
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          113.9345893,
+          22.5753642
+        ]
+      }
     }
   ],
   "properties": {
