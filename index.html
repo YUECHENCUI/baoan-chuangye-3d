@@ -32,15 +32,17 @@
   .maplibregl-popup-content{font-size:12px;line-height:1.55;padding:8px 10px}
   .maplibregl-popup-content b{font-size:13px}
   .maplibregl-popup-content table td{padding:0 6px 0 0;vertical-align:top}
+  /* Must stay shrink-wrapped: MapLibre Marker uses position:absolute; never override
+     that with position:relative or place labels become full-width red bars. */
   .anno-label{font-family:"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",system-ui,sans-serif;
     font-size:13px;font-weight:600;padding:2px 8px;border-radius:4px;white-space:nowrap;
+    display:inline-block;width:max-content;max-width:none;box-sizing:border-box;
     pointer-events:none;user-select:none;box-shadow:0 1px 4px rgba(0,0,0,.35);letter-spacing:.5px}
   .anno-label.peak{background:rgba(30,90,40,.88);color:#e8ffe8;border:1px solid #7dffa0}
   .anno-label.canal{background:rgba(0,120,140,.9);color:#e6ffff;border:1px solid #7dfff5}
-  .anno-label.place{background:rgba(190,30,30,.92);color:#fff;border:1px solid #ffb0b0}
+  .anno-label.place{background:rgba(190,30,30,.92);color:#fff;border:1px solid #ffb0b0;margin-bottom:6px}
   .anno-label.place::after{content:"";position:absolute;left:50%;bottom:-7px;transform:translateX(-50%);
     border-left:6px solid transparent;border-right:6px solid transparent;border-top:7px solid rgba(190,30,30,.92)}
-  .anno-label.place{position:relative;margin-bottom:6px}
 </style>
 </head>
 <body>
@@ -238,7 +240,11 @@ function syncLabelMarkers(){
     var el=document.createElement('div');
     el.className='anno-label '+kind;
     el.textContent=ft.properties.name;
-    var mk=new maplibregl.Marker({element:el,anchor:'bottom',offset:[0,-4]})
+    // Keep Marker shrink-wrapped even if CSS is overridden later.
+    el.style.display='inline-block';
+    el.style.width='max-content';
+    el.style.position=''; // let .maplibregl-marker absolute win; do not force relative
+    var mk=new maplibregl.Marker({element:el,anchor:'bottom',offset:[0,-4],pitchAlignment:'viewport',rotationAlignment:'viewport'})
       .setLngLat(ft.geometry.coordinates).addTo(map);
     labelMarkers.push(mk);
   });
