@@ -37,6 +37,10 @@
     pointer-events:none;user-select:none;box-shadow:0 1px 4px rgba(0,0,0,.35);letter-spacing:.5px}
   .anno-label.peak{background:rgba(30,90,40,.88);color:#e8ffe8;border:1px solid #7dffa0}
   .anno-label.canal{background:rgba(0,120,140,.9);color:#e6ffff;border:1px solid #7dfff5}
+  .anno-label.place{background:rgba(190,30,30,.92);color:#fff;border:1px solid #ffb0b0}
+  .anno-label.place::after{content:"";position:absolute;left:50%;bottom:-7px;transform:translateX(-50%);
+    border-left:6px solid transparent;border-right:6px solid transparent;border-top:7px solid rgba(190,30,30,.92)}
+  .anno-label.place{position:relative;margin-bottom:6px}
 </style>
 </head>
 <body>
@@ -67,6 +71,7 @@
     <label><input type="checkbox" id="t-road">主要道路（OSM）</label>
     <label><input type="checkbox" id="t-mountain" checked>山体资源</label>
     <label><input type="checkbox" id="t-canal" checked>水渠（新圳河）</label>
+    <label><input type="checkbox" id="t-dashi" checked>打石路</label>
     <label><input type="checkbox" id="t-labels" checked>标注</label>
   </section>
   <section>
@@ -84,6 +89,7 @@
     <div class="lg"><span class="ln" style="border-color:#d22"></span>城市更新重点片区范围</div>
     <div class="lg"><span class="sw" style="background:rgba(46,160,67,.45);border-color:#2ea043"></span>山体资源</div>
     <div class="lg"><span class="ln" style="border-color:#00bcd4;border-top-style:solid;border-top-width:3px"></span>水渠（新圳河）</div>
+    <div class="lg"><span class="ln" style="border-color:#ffd000;border-top-style:solid;border-top-width:4px"></span>打石路</div>
   </section>
   <section>
     <h2>视角</h2>
@@ -106,12 +112,13 @@
       <a href="downloads/boundary.geojson" download>boundary.geojson</a><br>
       <a href="data/mountains.geojson" download>mountains.geojson</a> ·
       <a href="data/canal.geojson" download>canal.geojson</a> ·
+      <a href="data/road_highlight.geojson" download>road_highlight.geojson</a> ·
       <a href="data/labels.geojson" download>labels.geojson</a>（标注可改）<br>
       坐标：EPSG:32650（UTM 50N）局部原点 E=181200，N=2499600，单位 m，Z 向上。
     </div>
   </section>
   <section class="muted">
-    数据：建筑底面 © OpenStreetMap 贡献者（ODbL）+ 3D-GloBFP（Che et al. 2024）；高度来自 OSM 标注或 3D-GloBFP / CMAB 估算（见各建筑属性）。山体资源取自 OSM wood/forest（尖岗山/大井山/孖松山）；水渠为 OSM「新圳河」。标注可改 <code>data/labels.geojson</code>。范围线由“图二：基地范围”配准并贴合 OSM 道路中心线，存在数十米级误差，仅供研究参考。
+    数据：建筑底面 © OpenStreetMap 贡献者（ODbL）+ 3D-GloBFP（Che et al. 2024）；高度来自 OSM 标注或 3D-GloBFP / CMAB 估算（见各建筑属性）。山体资源取自 OSM wood/forest（尖岗山/大井山/孖松山）；水渠为 OSM「新圳河」；打石路高亮为 OSM「打石一路/打石路」；标注含雪花科创城、留仙洞、西丽枢纽。标注可改 <code>data/labels.geojson</code>。范围线由“图二：基地范围”配准并贴合 OSM 道路中心线，存在数十米级误差，仅供研究参考。
   </section>
 </div>
 <div id="notice"></div>
@@ -172,7 +179,7 @@ function setBase(key){
     map.addLayer({id:'base',type:'raster',source:'base',paint:{'raster-fade-duration':150}},map.getLayer('roads')?'roads':undefined);
     applyGray();
   }
-  if(bm.crs!==currentCRS){ currentCRS=bm.crs; ['buildings','boundary','roads','mountains','canal','labels'].forEach(function(n){ if(map.getSource(n)&&DATA[currentCRS][n]) map.getSource(n).setData(DATA[currentCRS][n]); }); syncLabelMarkers(); }
+  if(bm.crs!==currentCRS){ currentCRS=bm.crs; ['buildings','boundary','roads','mountains','canal','road_highlight','labels'].forEach(function(n){ if(map.getSource(n)&&DATA[currentCRS][n]) map.getSource(n).setData(DATA[currentCRS][n]); }); syncLabelMarkers(); }
   if(key==='none'){ setVis('roads',true); document.getElementById('t-road').checked=true; }
 }
 function applyGray(){
@@ -227,7 +234,7 @@ function syncLabelMarkers(){
   if(!document.getElementById('t-labels').checked) return;
   var fc=DATA[currentCRS].labels; if(!fc) return;
   fc.features.forEach(function(ft){
-    var kind=ft.properties.kind==='canal'?'canal':'peak';
+    var kind=ft.properties.kind==='canal'?'canal':(ft.properties.kind==='place'?'place':'peak');
     var el=document.createElement('div');
     el.className='anno-label '+kind;
     el.textContent=ft.properties.name;
@@ -238,15 +245,16 @@ function syncLabelMarkers(){
 }
 
 map.on('load',function(){
-  Promise.all([loadJSON('buildings'),loadJSON('boundary'),loadJSON('roads'),loadJSON('mountains'),loadJSON('canal'),loadJSON('labels')]).then(function(r){
-    DATA.wgs={buildings:r[0],boundary:r[1],roads:r[2],mountains:r[3],canal:r[4],labels:r[5]};
-    DATA.gcj={buildings:toGCJ(r[0]),boundary:toGCJ(r[1]),roads:toGCJ(r[2]),mountains:toGCJ(r[3]),canal:toGCJ(r[4]),labels:toGCJ(r[5])};
+  Promise.all([loadJSON('buildings'),loadJSON('boundary'),loadJSON('roads'),loadJSON('mountains'),loadJSON('canal'),loadJSON('road_highlight'),loadJSON('labels')]).then(function(r){
+    DATA.wgs={buildings:r[0],boundary:r[1],roads:r[2],mountains:r[3],canal:r[4],road_highlight:r[5],labels:r[6]};
+    DATA.gcj={buildings:toGCJ(r[0]),boundary:toGCJ(r[1]),roads:toGCJ(r[2]),mountains:toGCJ(r[3]),canal:toGCJ(r[4]),road_highlight:toGCJ(r[5]),labels:toGCJ(r[6])};
     var d=DATA[currentCRS];
     map.addSource('roads',{type:'geojson',data:d.roads});
     map.addSource('boundary',{type:'geojson',data:d.boundary});
     map.addSource('buildings',{type:'geojson',data:d.buildings,promoteId:'bid'});
     map.addSource('mountains',{type:'geojson',data:d.mountains});
     map.addSource('canal',{type:'geojson',data:d.canal});
+    map.addSource('road_highlight',{type:'geojson',data:d.road_highlight});
     map.addSource('labels',{type:'geojson',data:d.labels});
     map.addLayer({id:'roads',type:'line',source:'roads',layout:{visibility:'none','line-cap':'round','line-join':'round'},paint:{'line-color':'#ffffff','line-width':['interpolate',['linear'],['zoom'],12,['match',['get','highway'],['motorway','trunk'],2.2,['primary'],1.6,1.0],16,['match',['get','highway'],['motorway','trunk'],9,['primary'],7,4]],'line-opacity':0.95}});
     map.addLayer({id:'roads-case',type:'line',source:'roads',layout:{visibility:'none'},paint:{'line-color':'#b9b6ae','line-width':0.6,'line-gap-width':['interpolate',['linear'],['zoom'],12,1.2,16,5]}},'roads');
@@ -255,6 +263,8 @@ map.on('load',function(){
     map.addLayer({id:'mountain-outline',type:'line',source:'mountains',paint:{'line-color':'#1a7f37','line-width':1.6,'line-opacity':0.85}});
     map.addLayer({id:'canal-halo',type:'line',source:'canal',layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':'#003d4d','line-width':8,'line-opacity':0.35,'line-blur':1}});
     map.addLayer({id:'canal-line',type:'line',source:'canal',layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':'#00e5ff','line-width':3.5,'line-opacity':0.95}});
+    map.addLayer({id:'dashi-halo',type:'line',source:'road_highlight',layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':'#7a5a00','line-width':10,'line-opacity':0.35}});
+    map.addLayer({id:'dashi-line',type:'line',source:'road_highlight',layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':'#ffd000','line-width':5,'line-opacity':0.95}});
     map.addLayer({id:'red-line',type:'line',source:'boundary',filter:['==',['get','kind'],'renewal_area'],paint:{'line-color':'#d42020','line-width':2.2,'line-dasharray':[3,2],'line-opacity':0.9}});
     map.addLayer({id:'study-halo',type:'line',source:'boundary',filter:['==',['get','kind'],'study_area'],paint:{'line-color':'#ffffff','line-width':6,'line-opacity':0.7}});
     map.addLayer({id:'study-line',type:'line',source:'boundary',filter:['==',['get','kind'],'study_area'],paint:{'line-color':'#4a4a4a','line-width':3,'line-dasharray':[5,1.6,1,1.6]}});
@@ -310,6 +320,7 @@ document.getElementById('t-red').onchange=function(){setVis('red-line',this.chec
 document.getElementById('t-road').onchange=function(){setVis(['roads','roads-case'],this.checked);};
 document.getElementById('t-mountain').onchange=function(){setVis(['mountain-fill','mountain-outline'],this.checked);};
 document.getElementById('t-canal').onchange=function(){setVis(['canal-halo','canal-line'],this.checked);};
+document.getElementById('t-dashi').onchange=function(){setVis(['dashi-halo','dashi-line'],this.checked);};
 document.getElementById('t-labels').onchange=function(){syncLabelMarkers();};
 document.getElementById('colormode').onchange=setColorMode;
 document.getElementById('v-home').onclick=function(){go('home');};

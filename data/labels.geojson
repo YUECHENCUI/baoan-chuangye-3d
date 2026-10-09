@@ -71,6 +71,63 @@
           22.5638
         ]
       }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "label_xuehua",
+        "name": "雪花科创城",
+        "kind": "place",
+        "target": "xuehua",
+        "osm": "way/1419648180",
+        "note": "OSM landuse=commercial 华润雪花科创城",
+        "editable": true
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          113.916588,
+          22.584898
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "label_liuxiandong",
+        "name": "留仙洞",
+        "kind": "place",
+        "target": "liuxiandong",
+        "osm": "node/6712237114",
+        "note": "OSM railway=station 留仙洞",
+        "editable": true
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          113.9390833,
+          22.583563
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "label_xili_hub",
+        "name": "西丽枢纽",
+        "kind": "place",
+        "target": "xili_hub",
+        "osm": "way/1081081947",
+        "note": "OSM 西丽高铁站 construction site — urban name 西丽枢纽",
+        "editable": true
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          113.940188,
+          22.568617
+        ]
+      }
     }
   ],
   "properties": {
